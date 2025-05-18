@@ -1,4 +1,3 @@
-
 # 📊 DynamiCollector
 
 **DynamiCollector** é um microserviço desenvolvido para **monitorar aplicações no Kubernetes**, com foco em coletar e organizar métricas exportadas por essas aplicações via **Zipkin**. Ele detecta alterações nos recursos (CPU, memória e réplicas) e registra as métricas associadas em um arquivo `.csv`, criando **séries temporais** que permitem análises posteriores de desempenho.
@@ -96,7 +95,7 @@ env:
   - name: DEPLOYMENT_NAME
     value: "<parte do nome do deployment>"
   - name: SERVICES
-    value: "RGB2Gray"
+    value: "<nome dos services zipkin que a aplicação exporta>"
   - name: ZIPKIN_URL
     value: "http://zipkin:30200"
 ```
