@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: dynamicollector-pv
+  namespace: default
+spec:
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/dynamicollector
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: dynamicollector-pvc
+  namespace: default
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: dynamicollector-role
+  namespace: default
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "watch"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: dynamicollector-rolebinding
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: default
+    namespace: default
+roleRef:
+  kind: Role
+  name: dynamicollector-role
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dynamicollector
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: dynamicollector
+  template:
+    metadata:
+      labels:
+        app: dynamicollector
+    spec:
+      containers:
+        - name: dynamicollector-container
+          image: juniorgui/dynamicollector:v43
+          env:
+            - name: NAMESPACE
+              value: "default"
+            - name: POD_NAME
+              value: "rgb2gray"
+            - name: DEPLOYMENT_NAME
+              value: "rgb2gray"
+            - name: SERVICES
+              value: "cam1 to gray,cam2 to gray,cam3 to gray,cam4 to gray"
+            - name: ZIPKIN_URL
+              value: "http://10.10.0.68:30200"
+          volumeMounts:
+            - mountPath: "/mnt/dynamicollector"
+              name: dynamicollector-volume
+      volumes:
+        - name: dynamicollector-volume
+          persistentVolumeClaim:
+            claimName: dynamicollector-pvc
